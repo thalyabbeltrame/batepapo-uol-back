@@ -1,10 +1,15 @@
+import Joi from 'joi';
 import dayjs from 'dayjs';
 
-import { nameSchema } from '../schemas/index.js';
 import { database as db } from '../index.js';
 
 export const postParticipant = async (req, res) => {
   const { name } = req.body;
+
+  const nameSchema = Joi.object({
+    name: Joi.string().required(),
+  });
+
   const { error } = nameSchema.validate({ name });
   if (error) return res.status(422).send(error.details[0].message);
 
@@ -13,7 +18,7 @@ export const postParticipant = async (req, res) => {
     if (participantAlreadyExists) return res.status(409).send('Participant already exists');
 
     const participantToSend = {
-      ...name,
+      name,
       lastStatus: Date.now(),
     };
 
