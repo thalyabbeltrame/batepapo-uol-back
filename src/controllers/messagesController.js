@@ -1,5 +1,6 @@
 import Joi from 'joi';
 import dayjs from 'dayjs';
+import { ObjectId } from 'mongodb';
 
 import { database as db } from '../index.js';
 import { getParticipantsName } from '../utils/index.js';
@@ -46,5 +47,22 @@ export const getMessage = async (req, res) => {
     res.status(201).send(messagesToSend.reverse());
   } catch (err) {
     res.sendStatus(500);
+  }
+};
+
+export const deleteMessage = async (req, res) => {
+  const user = req.header('user');
+  const messageId = req.params.id;
+  const _id = new ObjectId(messageId);
+
+  try {
+    const message = await db.collection('messages').findOne({ _id });
+    if (!message) return res.sendStatus(404);
+    if (message.from !== user) return res.sendStatus(401);
+
+    await db.collection('messages').deleteOne({ _id });
+    res.sendStatus(200);
+  } catch (err) {
+    res.send(err);
   }
 };

@@ -5,7 +5,7 @@ import { MongoClient } from 'mongodb';
 import { config as dotenvConfig } from 'dotenv';
 
 import { postParticipant, getParticipants, removeInactiveParticipants } from './controllers/participantsController.js';
-import { postMessage, getMessage } from './controllers/messagesController.js';
+import { postMessage, getMessage, deleteMessage } from './controllers/messagesController.js';
 import { postStatus } from './controllers/statusController.js';
 
 dotenvConfig();
@@ -29,6 +29,7 @@ app.get('/participants', getParticipants);
 app.post('/messages', postMessage);
 app.get('/messages', getMessage);
 app.post('/status', postStatus);
+app.delete('/messages/:id', deleteMessage);
 
 app.listen(PORT, () => {
   console.log(chalk.blue(`Server running on ${chalk.bold.italic(`http://localhost:${PORT}`)}`));
