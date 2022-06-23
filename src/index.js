@@ -4,7 +4,7 @@ import chalk from 'chalk';
 import { MongoClient } from 'mongodb';
 import { config as dotenvConfig } from 'dotenv';
 
-import { postParticipant, getParticipants } from './controllers/participantsController.js';
+import { postParticipant, getParticipants, removeInactiveParticipants } from './controllers/participantsController.js';
 import { postMessage, getMessage } from './controllers/messagesController.js';
 import { postStatus } from './controllers/statusController.js';
 
@@ -21,6 +21,7 @@ app.use([cors(), json()]);
 mongoClient.connect().then(() => {
   database = mongoClient.db('batepapo-uol');
   console.log(chalk.blue(`Connected to database ${chalk.bold.blue(database.databaseName)}`));
+  setInterval(removeInactiveParticipants, 15 * 1000);
 });
 
 app.post('/participants', postParticipant);
