@@ -6,6 +6,7 @@ import { config as dotenvConfig } from 'dotenv';
 
 import { postParticipant, getParticipants } from './controllers/participantsController.js';
 import { postMessage, getMessage } from './controllers/messagesController.js';
+import { postStatus } from './controllers/statusController.js';
 
 dotenvConfig();
 
@@ -26,7 +27,7 @@ app.post('/participants', postParticipant);
 app.get('/participants', getParticipants);
 app.post('/messages', postMessage);
 app.get('/messages', getMessage);
-// app.post('status', postStatus);
+app.post('/status', postStatus);
 
 app.listen(PORT, () => {
   console.log(chalk.blue(`Server running on ${chalk.bold.italic(`http://localhost:${PORT}`)}`));

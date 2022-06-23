@@ -37,16 +37,14 @@ export const postMessage = async (req, res) => {
 
 export const getMessage = async (req, res) => {
   const user = req.header('user');
-  const { limit } = parseInt(req.query);
+  const limit = parseInt(req.query.limit);
 
   try {
     const filter = { $or: [{ from: user }, { to: user }, { to: 'Todos' }] };
-    const messages = limit
-      ? await db.collection('messages').find(filter).limit(limit).toArray()
-      : await db.collection('messages').find(filter).toArray();
-    res.status(201).send(messages);
+    const messages = await db.collection('messages').find(filter).toArray();
+    const messagesToSend = limit ? [...messages].reverse().slice(0, limit) : [...messages].reverse();
+    res.status(201).send(messagesToSend.reverse());
   } catch (err) {
-    console.log(err);
     res.sendStatus(500);
   }
 };
