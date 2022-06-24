@@ -1,19 +1,15 @@
-import Joi from 'joi';
 import dayjs from 'dayjs';
 
 import { database as db } from '../index.js';
+import { validateParticipantsBody } from '../validators/participants.js';
 
 export const postParticipant = async (req, res) => {
   const { name } = req.body;
 
-  const nameSchema = Joi.object({
-    name: Joi.string().required(),
-  });
-
-  const { error } = nameSchema.validate({ name });
-  if (error) return res.status(422).send(error.details[0].message);
-
   try {
+    const { error } = await validateParticipantsBody({ name });
+    if (error) return res.status(422).send(error.details[0].message);
+
     const participantAlreadyExists = await db.collection('participants').findOne({ name });
     if (participantAlreadyExists) return res.status(409).send('Participant already exists');
 
@@ -45,26 +41,4 @@ export const getParticipants = async (_, res) => {
   } catch (err) {
     res.sendStatus(500);
   }
-};
-
-export const removeInactiveParticipants = async (req, res) => {
-  const filter = { lastStatus: { $lt: Date.now() - 10 * 1000 } };
-
-  try {
-    const inactiveParticipants = await db.collection('participants').find(filter).toArray();
-    if (inactiveParticipants.length !== 0) {
-      const newMessage = inactiveParticipants.map(({ name }) => {
-        return {
-          from: name,
-          to: 'Todos',
-          text: 'sai da sala...',
-          type: 'status',
-          time: dayjs().format('HH:mm:ss'),
-        };
-      });
-
-      await db.collection('participants').deleteMany(filter);
-      await db.collection('messages').insertMany(newMessage);
-    }
-  } catch (error) {}
 };

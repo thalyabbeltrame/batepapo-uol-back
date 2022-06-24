@@ -4,9 +4,10 @@ import chalk from 'chalk';
 import { MongoClient } from 'mongodb';
 import { config as dotenvConfig } from 'dotenv';
 
-import { postParticipant, getParticipants, removeInactiveParticipants } from './controllers/participantsController.js';
-import { postMessage, getMessage, deleteMessage } from './controllers/messagesController.js';
-import { postStatus } from './controllers/statusController.js';
+import { removeInactiveParticipants } from './utils/index.js';
+import { participantsRoute } from './routes/participantsRoute.js';
+import { messagesRoute } from './routes/messagesRoute.js';
+import { statusRoute } from './routes/statusRoute.js';
 
 dotenvConfig();
 
@@ -16,20 +17,15 @@ const PORT = process.env.PORT || 5000;
 export let database = null;
 const mongoClient = new MongoClient(MONGO_URI);
 const app = express();
-app.use([cors(), json()]);
+
+app.use(cors(), json());
+app.use(participantsRoute, messagesRoute, statusRoute);
 
 mongoClient.connect().then(() => {
   database = mongoClient.db('batepapo-uol');
   console.log(chalk.blue(`Connected to database ${chalk.bold.blue(database.databaseName)}`));
-  setInterval(removeInactiveParticipants, 15 * 1000);
+  // setInterval(removeInactiveParticipants, 15 * 1000);
 });
-
-app.post('/participants', postParticipant);
-app.get('/participants', getParticipants);
-app.post('/messages', postMessage);
-app.get('/messages', getMessage);
-app.post('/status', postStatus);
-app.delete('/messages/:id', deleteMessage);
 
 app.listen(PORT, () => {
   console.log(chalk.blue(`Server running on ${chalk.bold.italic(`http://localhost:${PORT}`)}`));
