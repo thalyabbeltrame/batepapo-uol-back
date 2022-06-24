@@ -1,4 +1,6 @@
-import { database as db } from '../index.js';
+import { database as db } from '../server.js';
+
+const INTERVAL_10S = 10 * 1000;
 
 export const getParticipantsName = async () => {
   const participants = await db.collection('participants').find().toArray();
@@ -7,7 +9,7 @@ export const getParticipantsName = async () => {
 };
 
 export const removeInactiveParticipants = async () => {
-  const filter = { lastStatus: { $lt: Date.now() - 10 * 1000 } };
+  const filter = { lastStatus: { $lt: Date.now() - INTERVAL_10S } };
 
   try {
     const inactiveParticipants = await db.collection('participants').find(filter).toArray();

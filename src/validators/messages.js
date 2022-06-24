@@ -2,7 +2,7 @@ import Joi from 'joi';
 
 import { getParticipantsName } from '../utils/index.js';
 
-export const validateMessageBodyAndHeader = async (req) => {
+export const validateMessageRequest = async (req) => {
   const participantsName = await getParticipantsName();
 
   const messageSchema = Joi.object({

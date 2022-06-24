@@ -1,13 +1,13 @@
 import dayjs from 'dayjs';
 
-import { database as db } from '../index.js';
-import { validateParticipantsBody } from '../validators/participants.js';
+import { database as db } from '../server.js';
+import { validateParticipantsRequest } from '../validators/participants.js';
 
 export const postParticipant = async (req, res) => {
   const { name } = req.body;
 
   try {
-    const { error } = await validateParticipantsBody({ name });
+    const { error } = await validateParticipantsRequest({ name });
     if (error) return res.status(422).send(error.details[0].message);
 
     const participantAlreadyExists = await db.collection('participants').findOne({ name });

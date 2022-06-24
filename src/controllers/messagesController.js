@@ -2,19 +2,19 @@ import Joi from 'joi';
 import dayjs from 'dayjs';
 import { ObjectId } from 'mongodb';
 
-import { database as db } from '../index.js';
-import { validateMessageBodyAndHeader } from '../validators/messages.js';
+import { database as db } from '../server.js';
+import { validateMessageRequest } from '../validators/messages.js';
 
 export const postMessage = async (req, res) => {
   const { to, text, type } = req.body;
-  const from = req.header('user');
+  const user = req.header('user');
 
   try {
-    const { error } = await validateMessageBodyAndHeader({ from, to, text, type });
+    const { error } = await validateMessageRequest({ from: user, to, text, type });
     if (error) return res.status(422).send(error.details[0].message);
 
     const messageToSend = {
-      from,
+      from: user,
       ...req.body,
       time: dayjs().format('HH:mm:ss'),
     };
@@ -43,11 +43,10 @@ export const getMessage = async (req, res) => {
 
 export const deleteMessage = async (req, res) => {
   const user = req.header('user');
-  const messageId = req.params.messageId;
-  const _id = new ObjectId(messageId);
-  console.log(_id);
+  const { messageId } = req.params;
 
   try {
+    const _id = new ObjectId(messageId);
     const message = await db.collection('messages').findOne({ _id });
     if (!message) return res.sendStatus(404);
     if (message.from !== user) return res.sendStatus(401);
@@ -61,20 +60,20 @@ export const deleteMessage = async (req, res) => {
 
 export const putMessage = async (req, res) => {
   const { to, text, type } = req.body;
-  const from = req.header('user');
-  const messageId = req.params.messageId;
-  const _id = new ObjectId(messageId);
+  const user = req.header('user');
+  const { messageId } = req.params;
 
   try {
-    const { error } = await validateMessageBodyAndHeader({ from, to, text, type });
+    const { error } = await validateMessageRequest({ from: user, to, text, type });
     if (error) return res.status(422).send(error.details[0].message);
 
+    const _id = new ObjectId(messageId);
     const message = await db.collection('messages').findOne({ _id });
     if (!message) return res.sendStatus(404);
-    if (message.from !== from) return res.sendStatus(401);
+    if (message.from !== user) return res.sendStatus(401);
 
     const messageToSend = {
-      from,
+      from: user,
       ...req.body,
       time: dayjs().format('HH:mm:ss'),
     };

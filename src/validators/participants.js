@@ -1,6 +1,6 @@
 import Joi from 'joi';
 
-export const validateParticipantsBody = async (req) => {
+export const validateParticipantsRequest = async (req) => {
   const nameSchema = Joi.object({
     name: Joi.string().required(),
   });
