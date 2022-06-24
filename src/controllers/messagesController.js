@@ -1,17 +1,24 @@
-import Joi from 'joi';
 import dayjs from 'dayjs';
 import { ObjectId } from 'mongodb';
+import { stripHtml } from 'string-strip-html';
 
 import { database as db } from '../server.js';
-import { validateMessageRequest } from '../validators/messages.js';
+import { validateMessageRequest } from '../validators/messagesRequest.js';
+import { httpStatus } from '../utils/httpStatus.js';
 
 export const postMessage = async (req, res) => {
-  const { to, text, type } = req.body;
-  const user = req.header('user');
+  console.log(req.body);
+  const { to, text, type } = {
+    to: stripHtml(req.body.to).result.trim(),
+    text: stripHtml(req.body.text).result.trim(),
+    type: stripHtml(req.body.type).result.trim(),
+  };
+  const user = stripHtml(req.header('user')).result.trim();
+  console.log({ to, text, type, user });
 
   try {
     const { error } = await validateMessageRequest({ from: user, to, text, type });
-    if (error) return res.status(422).send(error.details[0].message);
+    if (error) return res.status(httpStatus.UNPROCESSABLE_ENTITY).send(error.details[0].message);
 
     const messageToSend = {
       from: user,
@@ -20,14 +27,14 @@ export const postMessage = async (req, res) => {
     };
 
     await db.collection('messages').insertOne(messageToSend);
-    res.sendStatus(201);
+    res.send(httpStatus.CREATED);
   } catch (err) {
-    res.sendStatus(500);
+    res.sendStatus(httpStatus.INTERNAL_SERVER_ERROR);
   }
 };
 
 export const getMessage = async (req, res) => {
-  const user = req.header('user');
+  const user = stripHtml(req.header('user')).result.trim();
   let { limit } = req.query;
 
   try {
@@ -35,42 +42,46 @@ export const getMessage = async (req, res) => {
     const messages = await db.collection('messages').find(filter).toArray();
     limit = parseInt(limit) || messages.length;
     const messagesToSend = [...messages].reverse().slice(0, limit);
-    res.status(201).send(messagesToSend.reverse());
+    res.status(httpStatus.CREATED).send(messagesToSend.reverse());
   } catch (err) {
-    res.sendStatus(500);
+    res.sendStatus(httpStatus.INTERNAL_SERVER_ERROR);
   }
 };
 
 export const deleteMessage = async (req, res) => {
-  const user = req.header('user');
+  const user = stripHtml(req.header('user')).result.trim();
   const { messageId } = req.params;
 
   try {
     const _id = new ObjectId(messageId);
     const message = await db.collection('messages').findOne({ _id });
-    if (!message) return res.sendStatus(404);
-    if (message.from !== user) return res.sendStatus(401);
+    if (!message) return res.sendStatus(httpStatus.NOT_FOUND);
+    if (message.from !== user) return res.sendStatus(httpStatus.UNAUTHORIZED);
 
     await db.collection('messages').deleteOne({ _id });
-    res.sendStatus(200);
+    res.sendStatus(httpStatus.OK);
   } catch (err) {
     res.send(err);
   }
 };
 
 export const putMessage = async (req, res) => {
-  const { to, text, type } = req.body;
-  const user = req.header('user');
+  const { to, text, type } = {
+    to: stripHtml(req.body.to).result.trim(),
+    text: stripHtml(req.body.text).result.trim(),
+    type: stripHtml(req.body.type).result.trim(),
+  };
+  const user = stripHtml(req.header('user')).result.trim();
   const { messageId } = req.params;
 
   try {
     const { error } = await validateMessageRequest({ from: user, to, text, type });
-    if (error) return res.status(422).send(error.details[0].message);
+    if (error) return res.status(httpStatus.UNPROCESSABLE_ENTITY).send(error.details[0].message);
 
     const _id = new ObjectId(messageId);
     const message = await db.collection('messages').findOne({ _id });
-    if (!message) return res.sendStatus(404);
-    if (message.from !== user) return res.sendStatus(401);
+    if (!message) return res.sendStatus(httpStatus.NOT_FOUND);
+    if (message.from !== user) return res.sendStatus(httpStatus.UNAUTHORIZED);
 
     const messageToSend = {
       from: user,
@@ -78,8 +89,8 @@ export const putMessage = async (req, res) => {
       time: dayjs().format('HH:mm:ss'),
     };
     await db.collection('messages').updateOne({ _id }, { $set: messageToSend });
-    res.sendStatus(201);
+    res.sendStatus(httpStatus.CREATED);
   } catch (err) {
-    res.sendStatus(500);
+    res.sendStatus(httpStatus.INTERNAL_SERVER_ERROR);
   }
 };

@@ -1,6 +1,6 @@
 import Joi from 'joi';
 
-import { getParticipantsName } from '../utils/index.js';
+import { getParticipantsName } from '../utils/participants.js';
 
 export const validateMessageRequest = async (req) => {
   const participantsName = await getParticipantsName();

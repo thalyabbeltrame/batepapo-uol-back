@@ -1,17 +1,19 @@
 import dayjs from 'dayjs';
+import { stripHtml } from 'string-strip-html';
 
 import { database as db } from '../server.js';
-import { validateParticipantsRequest } from '../validators/participants.js';
+import { validateParticipantsRequest } from '../validators/participantsRequest.js';
+import { httpStatus } from '../utils/httpStatus.js';
 
 export const postParticipant = async (req, res) => {
-  const { name } = req.body;
+  const { name } = { name: stripHtml(req.body.name).result.trim() };
 
   try {
     const { error } = await validateParticipantsRequest({ name });
-    if (error) return res.status(422).send(error.details[0].message);
+    if (error) return res.status(httpStatus.UNPROCESSABLE_ENTITY).send(error.details[0].message);
 
     const participantAlreadyExists = await db.collection('participants').findOne({ name });
-    if (participantAlreadyExists) return res.status(409).send('Participant already exists');
+    if (participantAlreadyExists) return res.status(httpStatus.CONFLICT).send('Participant already exists');
 
     const participantToSend = {
       name,
@@ -28,17 +30,17 @@ export const postParticipant = async (req, res) => {
 
     await db.collection('participants').insertOne(participantToSend);
     await db.collection('messages').insertOne(messageToSend);
-    res.sendStatus(201);
+    res.sendStatus(httpStatus.CREATED);
   } catch (err) {
-    res.sendStatus(500);
+    res.sendStatus(httpStatus.INTERNAL_SERVER_ERROR);
   }
 };
 
 export const getParticipants = async (_, res) => {
   try {
     const participants = await db.collection('participants').find().toArray();
-    res.status(201).send(participants);
+    res.status(httpStatus.CREATED).send(participants);
   } catch (err) {
-    res.sendStatus(500);
+    res.sendStatus(httpStatus.INTERNAL_SERVER_ERROR);
   }
 };

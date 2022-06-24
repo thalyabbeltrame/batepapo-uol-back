@@ -2,7 +2,6 @@ import { Router } from 'express';
 
 import { postStatus } from '../controllers/statusController.js';
 
-export const statusRoute = Router();
+export const statusRoutes = Router();
 
-statusRoute.post('/status', postStatus);
-
+statusRoutes.post('/status', postStatus);

@@ -4,10 +4,10 @@ import chalk from 'chalk';
 import { MongoClient } from 'mongodb';
 import { config as dotenvConfig } from 'dotenv';
 
-import { removeInactiveParticipants } from './utils/index.js';
-import { participantsRoute } from './routes/participantsRoute.js';
-import { messagesRoute } from './routes/messagesRoute.js';
-import { statusRoute } from './routes/statusRoute.js';
+import { removeInactiveParticipants } from './utils/participants.js';
+import { participantsRoutes } from './routes/participantsRoutes.js';
+import { messagesRoutes } from './routes/messagesRoutes.js';
+import { statusRoutes } from './routes/statusRoutes.js';
 
 dotenvConfig();
 
@@ -20,7 +20,7 @@ const mongoClient = new MongoClient(MONGO_URI);
 const app = express();
 
 app.use(cors(), json());
-app.use(participantsRoute, messagesRoute, statusRoute);
+app.use(participantsRoutes, messagesRoutes, statusRoutes);
 
 mongoClient.connect().then(() => {
   database = mongoClient.db('batepapo-uol');

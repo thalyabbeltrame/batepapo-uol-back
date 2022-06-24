@@ -1,5 +1,6 @@
 import { database as db } from '../server.js';
-import { getParticipantsName } from '../utils/index.js';
+import { getParticipantsName } from '../utils/participants.js';
+import { httpStatus } from '../utils/httpStatus.js';
 
 export const postStatus = async (req, res) => {
   const user = req.header('user');
@@ -7,11 +8,11 @@ export const postStatus = async (req, res) => {
   try {
     const participantsName = await getParticipantsName();
     const userExists = participantsName.some((participant) => participant === user);
-    if (!userExists) return res.sendStatus(404);
+    if (!userExists) return res.sendStatus(httpStatus.NOT_FOUND);
     
     await db.collection('participants').updateOne({ name: user }, { $set: { lastStatus: Date.now() } });
-    res.sendStatus(200);
+    res.sendStatus(httpStatus.OK);
   } catch (err) {
-    res.sendStatus(500);
+    res.sendStatus(httpStatus.INTERNAL_SERVER_ERROR);
   }
 };
