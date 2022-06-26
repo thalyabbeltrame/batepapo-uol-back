@@ -19,13 +19,16 @@ export let database = null;
 const mongoClient = new MongoClient(MONGO_URI);
 const app = express();
 
-app.use(cors(), json());
-app.use(participantsRoutes, messagesRoutes, statusRoutes);
+app.use(cors());
+app.use(json());
+app.use('/participants', participantsRoutes);
+app.use('/messages', messagesRoutes);
+app.use('/status', statusRoutes);
 
 mongoClient.connect().then(() => {
   database = mongoClient.db('batepapo-uol');
   console.log(chalk.blue(`Connected to database ${chalk.bold.blue(database.databaseName)}`));
-  // setInterval(removeInactiveParticipants, INTERVAL_15S);
+  setInterval(removeInactiveParticipants, INTERVAL_15S);
 });
 
 app.listen(PORT, () => {

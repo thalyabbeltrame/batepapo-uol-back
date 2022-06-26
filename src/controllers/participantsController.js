@@ -5,18 +5,18 @@ import { database as db } from '../server.js';
 import { validateParticipantsRequest } from '../validators/participantsRequest.js';
 import { httpStatus } from '../utils/httpStatus.js';
 
-export const postParticipant = async (req, res) => {
-  const { name } = { name: stripHtml(req.body.name).result.trim() };
+export const insertParticipant = async (req, res) => {
+  const name = stripHtml(req.body.name).result.trim();
 
   try {
     const { error } = await validateParticipantsRequest({ name });
-    if (error) return res.status(httpStatus.UNPROCESSABLE_ENTITY).send(error.details[0].message);
+    if (error) return res.status(httpStatus.UNPROCESSABLE_ENTITY).send(error.details.map(({ message }) => message));
 
     const participantAlreadyExists = await db.collection('participants').findOne({ name });
-    if (participantAlreadyExists) return res.status(httpStatus.CONFLICT).send('Participant already exists');
+    if (participantAlreadyExists) return res.sendStatus(httpStatus.CONFLICT);
 
     const participantToSend = {
-      name,
+      name: name,
       lastStatus: Date.now(),
     };
 
@@ -39,7 +39,7 @@ export const postParticipant = async (req, res) => {
 export const getParticipants = async (_, res) => {
   try {
     const participants = await db.collection('participants').find().toArray();
-    res.status(httpStatus.CREATED).send(participants);
+    res.status(httpStatus.OK).send(participants);
   } catch (err) {
     res.sendStatus(httpStatus.INTERNAL_SERVER_ERROR);
   }

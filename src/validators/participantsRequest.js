@@ -1,9 +1,9 @@
 import Joi from 'joi';
 
 export const validateParticipantsRequest = async (req) => {
-  const nameSchema = Joi.object({
+  const participantSchema = Joi.object({
     name: Joi.string().required(),
   });
 
-  return nameSchema.validate(req);
+  return participantSchema.validate(req, { abortEarly: false });
 };

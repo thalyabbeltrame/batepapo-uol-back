@@ -12,5 +12,5 @@ export const validateMessageRequest = async (req) => {
     type: Joi.valid('message', 'private_message').required(),
   });
 
-  return messageSchema.validate(req);
+  return messageSchema.validate(req, { abortEarly: false });
 };

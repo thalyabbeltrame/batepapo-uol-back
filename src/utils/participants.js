@@ -1,20 +1,19 @@
 import { database as db } from '../server.js';
 
-const INTERVAL_10S = 10 * 1000;
+const TIME_10S = 10 * 1000;
 
 export const getParticipantsName = async () => {
   const participants = await db.collection('participants').find().toArray();
-  const participantsName = participants.map((participants) => participants.name);
-  return participantsName;
+  return participants.map((participants) => participants.name);
 };
 
 export const removeInactiveParticipants = async () => {
-  const filter = { lastStatus: { $lt: Date.now() - INTERVAL_10S } };
+  const filter = { lastStatus: { $lt: Date.now() - TIME_10S } };
 
   try {
     const inactiveParticipants = await db.collection('participants').find(filter).toArray();
-    if (inactiveParticipants.length !== 0) {
-      const newMessage = inactiveParticipants.map(({ name }) => {
+    if (inactiveParticipants.length) {
+      const newMessages = inactiveParticipants.map(({ name }) => {
         return {
           from: name,
           to: 'Todos',
@@ -25,7 +24,9 @@ export const removeInactiveParticipants = async () => {
       });
 
       await db.collection('participants').deleteMany(filter);
-      await db.collection('messages').insertMany(newMessage);
+      await db.collection('messages').insertMany(newMessages);
     }
-  } catch (error) {}
+  } catch (err) {
+    res.sendStatus(httpStatus.INTERNAL_SERVER_ERROR);
+  }
 };
